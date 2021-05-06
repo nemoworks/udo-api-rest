@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>info.nemoworks</groupId>
 	<artifactId>udo-rest</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>udo-rest</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
@@ -43,6 +43,25 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-client</artifactId>
+            <version>7.12.0</version>
+        </dependency>
+
+		<dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>30.1.1-jre</version>
+        </dependency>
+		
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>7.12.0</version>
+        </dependency>
 	</dependencies>
 
 	<build>
