@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>info.nemoworks</groupId>
-	<artifactId>udo-rest</artifactId>
+	<artifactId>udo-api-rest</artifactId>
 	<version>0.0.1</version>
-	<name>udo-rest</name>
+	<name>udo-api-rest</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>11</java.version>
