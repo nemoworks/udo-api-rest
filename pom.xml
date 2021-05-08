@@ -24,7 +24,7 @@
 		</dependency>
 		<dependency>
 			<groupId>info.nemoworks</groupId>
-			<artifactId>udo-storage</artifactId>
+			<artifactId>udo-storage-elasticsearch</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
