@@ -9,13 +9,13 @@ import info.nemoworks.udo.service.UdoService;
 @Controller
 public class UdoController {
 
-    // @Autowired
-    // private UdoService udoService;
+    @Autowired
+    private UdoService udoService;
 
-    @GetMapping(value ="/")
-    public void welcome(){
+    @GetMapping(value = "/")
+    public void welcome() {
 
-        // udoService.notify();
+        udoService.notify();
     }
-    
+
 }
