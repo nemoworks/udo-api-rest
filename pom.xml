@@ -5,7 +5,7 @@
 		<groupId>info.nemoworks</groupId>
 		<artifactId>udo-application</artifactId>
 		<version>0.0.1</version>
-        <relativePath>../.</relativePath><!-- lookup parent from repository -->
+		<relativePath>../.</relativePath> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>info.nemoworks</groupId>
 	<artifactId>udo-api-rest</artifactId>
@@ -26,7 +26,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-		  </dependency>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>

@@ -1,27 +1,28 @@
 package info.nemoworks.udo.rest;
 
+import com.google.gson.Gson;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.RestClients;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.context.annotation.ComponentScan;
 
-@Configuration
-@EnableElasticsearchRepositories(basePackages = "info.nemoworks.udo.repository.elasticsearch")
+@TestConfiguration
+@ComponentScan(basePackages = { "info.nemoworks.udo.repository.elasticsearch" })
 public class ElasticsearchConfig {
 
     @Bean
     RestHighLevelClient client() {
-        ClientConfiguration clientConfiguration = ClientConfiguration.builder().connectedTo("localhost:9200").build();
-
-        return RestClients.create(clientConfiguration).rest();
+        RestHighLevelClient client = new RestHighLevelClient(
+                RestClient.builder(
+                        new HttpHost("localhost", 9200, "http"),
+                        new HttpHost("localhost", 9201, "http")));
+        return client;
     }
 
     @Bean
-    public ElasticsearchOperations elasticsearchTemplate() {
-        return new ElasticsearchRestTemplate(client());
+    Gson gson(){
+        return new Gson();
     }
 }
