@@ -4,6 +4,8 @@ import java.util.Arrays;
 
 import com.google.common.eventbus.EventBus;
 
+import info.nemoworks.udo.messaging.HTTPServiceGateway;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,29 +18,34 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootApplication
 @ComponentScan(basePackages = "info.nemoworks.udo")
 @Slf4j
-public class UdoRestApplication {
+public class UdoRestApplication implements CommandLineRunner{
 
 	public static void main(String[] args) {
 		SpringApplication.run(UdoRestApplication.class, args);
 	}
 
-	@Bean
-	public EventBus eventBus() {
-		return new EventBus();
-	}
 
-	@Bean
-	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
-		return args -> {
+	@Autowired
+    private HTTPServiceGateway httpServiceGateway;
 
-			log.info("Let's inspect the beans provided by Spring Boot:");
+	@Autowired
+	EventBus eventBus;
 
-			String[] beanNames = ctx.getBeanDefinitionNames();
-			Arrays.sort(beanNames);
-			for (String beanName : beanNames) {
-				log.info(beanName);
-			}
-		};
-	}
+
+    @Override
+    public void run(String... args) throws Exception {
+		eventBus.register(httpServiceGateway);
+        while(true){
+            System.out.println("start...");
+            if(httpServiceGateway.getEndpoints().size()>0){
+                httpServiceGateway.start();
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 }

@@ -1,4 +1,4 @@
-package info.nemoworks.udo.rest;
+package info.nemoworks.udo.rest.config;
 
 import com.google.gson.Gson;
 import org.apache.http.HttpHost;

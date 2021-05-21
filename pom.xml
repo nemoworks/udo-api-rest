@@ -24,6 +24,16 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>info.nemoworks</groupId>
+			<artifactId>udo-messaging</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>info.nemoworks</groupId>
+			<artifactId>udo-api-graphql</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
