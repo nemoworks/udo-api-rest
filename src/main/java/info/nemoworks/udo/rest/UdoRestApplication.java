@@ -5,9 +5,7 @@ import java.util.Arrays;
 import com.google.common.eventbus.EventBus;
 
 import info.nemoworks.udo.messaging.HTTPServiceGateway;
-import info.nemoworks.udo.model.SyncEvent;
 import info.nemoworks.udo.service.SyncEventHandler;
-import info.nemoworks.udo.service.UdoEventManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
