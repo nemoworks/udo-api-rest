@@ -36,7 +36,6 @@ public class ApplicationContextController {
         Pair<String, String> mqttTopic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo);
         applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
         applicationContext.publishMessage(mqttTopic.getValue1(), "asasasaxcasdcswd".getBytes());
-
         System.out.println("num of applicationContext: "+ApplicationContextCluster.getApplicationContextMap().size());
         return applicationContext.getAppId();
     }

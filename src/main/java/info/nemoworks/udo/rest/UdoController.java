@@ -1,11 +1,13 @@
 package info.nemoworks.udo.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import info.nemoworks.udo.graphql.graphqlBuilder.GraphQLBuilder;
 import info.nemoworks.udo.graphql.schemaParser.SchemaTree;
+import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UdoType;
 import info.nemoworks.udo.service.UdoService;
 import info.nemoworks.udo.service.UdoServiceException;
@@ -71,8 +73,27 @@ public class UdoController {
         return null;
     }
 
+    @PostMapping("/documents")
+    public Udo createUdoByUri(@RequestParam String uri, @RequestParam String id) throws UdoServiceException, InterruptedException, JsonProcessingException {
+        logger.info("now creating udo " + id + "by uri: " + uri + "...");
+        udoService.createUdoByUri(uri, id);
+        Udo udo = udoService.getUdoById(id);
+        while (udo == null) {
+            Thread.sleep(1000);
+            udo = udoService.getUdoById(id);
+        }
+        UdoType udoType = udo.inferType();
+        JsonObject schema = udoType.getSchema();
+        schema.addProperty("title", id);
+        udoType.setSchema(schema);
+        SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+                .fromJson(udoType.getSchema().toString(), JsonObject.class));
+        this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
+        return udo;
+    }
+
     @DeleteMapping("/schemas/{udoi}")
-    public List<UdoType> deleteUdoType(@PathVariable String udoi){
+    public List<UdoType> deleteUdoType(@PathVariable String udoi) {
         logger.info("now deleting udoType " + udoi + "...");
         UdoType udoType = udoService.getTypeById(udoi);
         SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
@@ -94,7 +115,7 @@ public class UdoController {
     }
 
     @PutMapping("/schemas/{udoi}")
-    public UdoType updateUdoType(@RequestBody JsonObject params, @PathVariable String udoi){
+    public UdoType updateUdoType(@RequestBody JsonObject params, @PathVariable String udoi) {
 //        String udoi = params.getString("udoi");
         logger.info("now updating schema " + udoi + "...");
 //        String name = params.get("schemaName").getAsString();
