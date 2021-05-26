@@ -3,8 +3,8 @@ package info.nemoworks.udo.rest;
 import com.google.common.eventbus.EventBus;
 
 import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
-import info.nemoworks.udo.service.SaveByUriEventHandler;
-import info.nemoworks.udo.service.SyncEventHandler;
+import info.nemoworks.udo.service.eventHandler.SaveByUriEventHandler;
+import info.nemoworks.udo.service.eventHandler.SyncEventHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;

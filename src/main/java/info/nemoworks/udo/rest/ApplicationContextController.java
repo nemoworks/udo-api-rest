@@ -10,6 +10,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -31,12 +33,15 @@ public class ApplicationContextController {
     @PostMapping("/applicationContext")
     public String createApplicationContext(@RequestParam String id) throws MqttException {
         ApplicationContext applicationContext = new ApplicationContext(publisher,subscriber,udoGateway,id);
-        Udo udo = new Udo(null, null);
-        udo.setId(UUID.randomUUID().toString());
-        Pair<String, String> mqttTopic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo);
-        applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
-        applicationContext.publishMessage(mqttTopic.getValue1(), "asasasaxcasdcswd".getBytes());
-        System.out.println("num of applicationContext: "+ApplicationContextCluster.getApplicationContextMap().size());
         return applicationContext.getAppId();
     }
+
+    @DeleteMapping("/applicationContext")
+    public Set<String> deleteApplicationContext(@RequestParam String id) throws MqttException {
+        ApplicationContextCluster.removeApplicationContext(id);
+        return ApplicationContextCluster.getApplicationContextMap().keySet();
+    }
+
+
+
 }
