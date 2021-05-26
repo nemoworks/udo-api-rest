@@ -1,19 +1,13 @@
 package info.nemoworks.udo.rest;
 
-import java.util.Arrays;
-
 import com.google.common.eventbus.EventBus;
 
-import info.nemoworks.udo.messaging.HTTPServiceGateway;
-import info.nemoworks.udo.model.SyncEvent;
+import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import info.nemoworks.udo.service.SyncEventHandler;
-import info.nemoworks.udo.service.UdoEventManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +22,6 @@ public class UdoRestApplication implements CommandLineRunner{
 	public static void main(String[] args) {
 		SpringApplication.run(UdoRestApplication.class, args);
 	}
-
 
 	@Autowired
     private HTTPServiceGateway httpServiceGateway;
