@@ -11,20 +11,28 @@ import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UdoType;
 import info.nemoworks.udo.service.UdoService;
 import info.nemoworks.udo.service.UdoServiceException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/api")
+@Slf4j
 public class UdoController {
 
-    private static final Logger logger = LoggerFactory.getLogger(UdoController.class);
+//    private static final Logger log = LoggerFactory.getLogger(UdoController.class);
 
     private final UdoService udoService;
 
@@ -42,29 +50,33 @@ public class UdoController {
     @PostMapping(value = "/documents/query")
     public ResponseEntity query(@RequestBody String query) {
         ExecutionResult result = graphQL.execute(query);
-        logger.info("errors: " + result.getErrors());
-        if (result.getErrors().isEmpty())
+        log.info("query: " + query);
+        log.info("errors: " + result.getErrors());
+        if (result.getErrors().isEmpty()) {
             return ResponseEntity.ok(result.getData());
-        else return ResponseEntity.badRequest().body(result.getErrors());
+        } else {
+            return ResponseEntity.badRequest().body(result.getErrors());
+        }
     }
 
     @GetMapping("/schemas")
     public List<UdoType> allUdoTypes() {
-        logger.info("find all udoTypes...");
+        log.info("find all udoTypes...");
 //        Gson gson = new Gson();
         return udoService.getAllTypes();
     }
 
     @PostMapping("/schemas")
     public UdoType createUdoType(@RequestBody JsonObject params) {
-        logger.info("now saving a new udotype...");
-        String name = params.get("schemaName").getAsString();
-        JsonObject content = params.get("schemaContent").getAsJsonObject();
-
+        log.info("now saving a new udotype...");
+//        String name = params.get("schemaName").getAsString();
+        JsonObject content = (JsonObject) params.get("content");
         UdoType udoType = new UdoType(content);
-        SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+        if (content.has("properties")) {
+            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
                 .fromJson(udoType.getSchema().toString(), JsonObject.class));
-        this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
+            this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
+        }
         try {
             return udoService.saveOrUpdateType(udoType);
         } catch (UdoServiceException e) {
@@ -74,31 +86,34 @@ public class UdoController {
     }
 
     @PostMapping("/documents")
-    public Udo createUdoByUri(@RequestParam String uri, @RequestParam String id) throws UdoServiceException, InterruptedException, JsonProcessingException {
-        logger.info("now creating udo " + id + "by uri: " + uri + "...");
+    public Udo createUdoByUri(@RequestParam String uri, @RequestParam String id)
+        throws UdoServiceException, InterruptedException, JsonProcessingException {
+        log.info("now creating udo " + id + "by uri: " + uri + "...");
         udoService.createUdoByUri(uri, id);
         Udo udo = udoService.getUdoById(id);
         while (udo == null) {
-            Thread.sleep(1000);
             udo = udoService.getUdoById(id);
+            Thread.sleep(1000);
         }
         UdoType udoType = udo.inferType();
-        JsonObject schema = udoType.getSchema();
-        schema.addProperty("title", id);
-        udoType.setSchema(schema);
+//        JsonObject schema = udoType.getSchema();
+//        schema.addProperty("title", id);
+//        udoType.setSchema(schema);
         SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
-                .fromJson(udoType.getSchema().toString(), JsonObject.class));
+            .fromJson(udoType.getSchema().toString(), JsonObject.class));
         this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
         return udo;
     }
 
     @DeleteMapping("/schemas/{udoi}")
     public List<UdoType> deleteUdoType(@PathVariable String udoi) {
-        logger.info("now deleting udoType " + udoi + "...");
+        log.info("now deleting udoType " + udoi + "...");
         UdoType udoType = udoService.getTypeById(udoi);
-        SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+        if (udoType.getSchema().has("properties")) {
+            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
                 .fromJson(udoType.getSchema().toString(), JsonObject.class));
-        this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
+            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
+        }
         try {
             udoService.deleteTypeById(udoi);
         } catch (UdoServiceException e) {
@@ -109,7 +124,7 @@ public class UdoController {
 
     @GetMapping("/schemas/{udoi}")
     public UdoType getUdoTypeById(@PathVariable String udoi) {
-        logger.info("now finding UdoType by udoi...");
+        log.info("now finding UdoType by udoi " + udoi + "...");
 //        Gson gson = new Gson();
         return udoService.getTypeById(udoi);
     }
@@ -117,10 +132,20 @@ public class UdoController {
     @PutMapping("/schemas/{udoi}")
     public UdoType updateUdoType(@RequestBody JsonObject params, @PathVariable String udoi) {
 //        String udoi = params.getString("udoi");
-        logger.info("now updating schema " + udoi + "...");
-//        String name = params.get("schemaName").getAsString();
-        JsonObject content = params.get("schemaContent").getAsJsonObject();
-//        Gson gson = new Gson();
+        log.info("now updating schema " + udoi + "...");
+        JsonObject content = (JsonObject) params.get("content");
+        UdoType udoType = new UdoType(content);
+        udoType.setId(udoi);
+        if (content.has("properties")) {
+            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+                .fromJson(udoType.getSchema().toString(), JsonObject.class));
+            this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
+        }
+        try {
+            return udoService.saveOrUpdateType(udoType);
+        } catch (UdoServiceException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
