@@ -11,6 +11,8 @@ import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UdoType;
 import info.nemoworks.udo.service.UdoService;
 import info.nemoworks.udo.service.UdoServiceException;
+import info.nemoworks.udo.storage.UdoNotExistException;
+import info.nemoworks.udo.storage.UdoPersistException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,7 @@ public class UdoController {
         ExecutionResult result = graphQL.execute(query);
         log.info("query: " + query);
         log.info("errors: " + result.getErrors());
+        System.out.println(ResponseEntity.ok(result.getData()));
         if (result.getErrors().isEmpty()) {
             return ResponseEntity.ok(result.getData());
         } else {
@@ -86,21 +89,18 @@ public class UdoController {
     }
 
     @PostMapping("/documents")
-    public Udo createUdoByUri(@RequestParam String uri, @RequestParam String id)
-        throws UdoServiceException, InterruptedException, JsonProcessingException {
-        log.info("now creating udo " + id + "by uri: " + uri + "...");
-        udoService.createUdoByUri(uri, id);
+    public Udo createUdoByUri(@RequestParam String uri)
+        throws UdoServiceException, InterruptedException, JsonProcessingException, UdoNotExistException, UdoPersistException {
+        log.info("now creating udo by uri: " + uri + "...");
+        String id = udoService.createUdoByUri(uri);
         Udo udo = udoService.getUdoById(id);
         while (udo == null) {
             udo = udoService.getUdoById(id);
             Thread.sleep(1000);
         }
-        UdoType udoType = udo.inferType();
-//        JsonObject schema = udoType.getSchema();
-//        schema.addProperty("title", id);
-//        udoType.setSchema(schema);
+//        UdoType udoType = udo.inferType();
         SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
-            .fromJson(udoType.getSchema().toString(), JsonObject.class));
+            .fromJson(udo.inferType().getSchema().toString(), JsonObject.class));
         this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
         return udo;
     }
