@@ -3,6 +3,7 @@ package info.nemoworks.udo.rest;
 import com.google.common.eventbus.EventBus;
 import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import info.nemoworks.udo.service.eventHandler.SaveByUriEventHandler;
+import info.nemoworks.udo.service.eventHandler.SubscribeByMqttEventHandler;
 import info.nemoworks.udo.service.eventHandler.SyncEventHandler;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +34,15 @@ public class UdoRestApplication implements CommandLineRunner {
     @Autowired
     SaveByUriEventHandler saveByUriEventHandler;
 
+    @Autowired
+    SubscribeByMqttEventHandler subscribeByMqttEventHandler;
+
     @PostConstruct
     public void registerEventHandler() {
         eventBus.register(httpServiceGateway);
         eventBus.register(syncEventHandler);
         eventBus.register(saveByUriEventHandler);
+        eventBus.register(subscribeByMqttEventHandler);
     }
 
 

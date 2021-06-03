@@ -1,16 +1,16 @@
 package info.nemoworks.udo.rest;
 
-import info.nemoworks.udo.messaging.gateway.UdoGateway;
+import com.google.common.eventbus.EventBus;
+import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import info.nemoworks.udo.messaging.messaging.ApplicationContext;
 import info.nemoworks.udo.messaging.messaging.ApplicationContextCluster;
 import info.nemoworks.udo.messaging.messaging.Publisher;
 import info.nemoworks.udo.messaging.messaging.Subscriber;
 import info.nemoworks.udo.model.Udo;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.javatuples.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -22,17 +22,25 @@ public class ApplicationContextController {
 
     private final Subscriber subscriber;
 
-    private final UdoGateway udoGateway;
+    @Autowired
+    EventBus eventBus;
 
-    public ApplicationContextController(Publisher publisher, Subscriber subscriber, UdoGateway udoGateway) {
+    @Autowired
+    HTTPServiceGateway httpServiceGateway;
+
+    public ApplicationContextController(Publisher publisher, Subscriber subscriber) {
         this.publisher = publisher;
         this.subscriber = subscriber;
-        this.udoGateway = udoGateway;
     }
 
     @PostMapping("/applicationContext")
     public String createApplicationContext(@RequestParam String id) throws MqttException {
-        ApplicationContext applicationContext = new ApplicationContext(publisher,subscriber,udoGateway,id);
+        ApplicationContext applicationContext = new ApplicationContext(publisher,subscriber, httpServiceGateway);
+        applicationContext.setAppId(id);
+        eventBus.register(applicationContext);
+        Udo udo = new Udo(null, null);
+        udo.setId("udo");
+        applicationContext.subscribeMessage(applicationContext.getAppId(),udo);
         return applicationContext.getAppId();
     }
 
