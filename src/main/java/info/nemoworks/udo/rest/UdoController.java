@@ -69,15 +69,28 @@ public class UdoController {
         return udoService.getAllTypes();
     }
 
+    @GetMapping("/documents")
+    public List<Udo> allUdos() {
+        log.info("find all udos...");
+        return udoService.getAllUdos();
+    }
+
+    @GetMapping("/documents/{udoi}")
+    public Udo getUdoById(@PathVariable String udoi) {
+        log.info("find udo by id: " + udoi + " ...");
+        return udoService.getUdoById(udoi);
+    }
+
     @PostMapping("/schemas")
     public UdoType createUdoType(@RequestBody JsonObject params) {
         log.info("now saving a new udotype...");
 //        String name = params.get("schemaName").getAsString();
         JsonObject content = (JsonObject) params.get("content");
+        String name = params.get("name").getAsString();
         UdoType udoType = new UdoType(content);
         if (content.has("properties")) {
             SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
-                .fromJson(udoType.getSchema().toString(), JsonObject.class));
+                .fromJson(udoType.getSchema().toString(), JsonObject.class), name);
             this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
         }
         try {
@@ -89,7 +102,7 @@ public class UdoController {
     }
 
     @PostMapping("/documents")
-    public Udo createUdoByUri(@RequestParam String uri)
+    public Udo createUdoByUri(@RequestParam String uri, @RequestParam String name)
         throws UdoServiceException, InterruptedException, JsonProcessingException, UdoNotExistException, UdoPersistException {
         log.info("now creating udo by uri: " + uri + "...");
         String id = udoService.createUdoByUri(uri);
@@ -100,7 +113,7 @@ public class UdoController {
         }
 //        UdoType udoType = udo.inferType();
         SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
-            .fromJson(udo.inferType().getSchema().toString(), JsonObject.class));
+            .fromJson(udo.inferType().getSchema().toString(), JsonObject.class), name);
         this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
         return udo;
     }
