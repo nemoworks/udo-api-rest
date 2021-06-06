@@ -13,6 +13,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 @SpringBootApplication
 @ComponentScan(basePackages = "info.nemoworks.udo")
 @Slf4j
@@ -38,11 +41,12 @@ public class UdoRestApplication implements CommandLineRunner {
     SubscribeByMqttEventHandler subscribeByMqttEventHandler;
 
     @PostConstruct
-    public void registerEventHandler() {
+    public void registerEventHandler() throws URISyntaxException {
         eventBus.register(httpServiceGateway);
         eventBus.register(syncEventHandler);
         eventBus.register(saveByUriEventHandler);
         eventBus.register(subscribeByMqttEventHandler);
+        httpServiceGateway.register("H4863HkBn1Poxb4D_FLG", new URI("localhost:8081"));
     }
 
 

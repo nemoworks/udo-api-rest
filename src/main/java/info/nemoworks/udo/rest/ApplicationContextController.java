@@ -11,6 +11,8 @@ import info.nemoworks.udo.messaging.messaging.Subscriber;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UdoType;
 import info.nemoworks.udo.service.UdoService;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +24,6 @@ import java.util.UUID;
 @CrossOrigin
 @RequestMapping("/api")
 public class ApplicationContextController {
-    private final Publisher publisher;
-
-    private final Subscriber subscriber;
 
     @Autowired
     UdoService udoService;
@@ -35,19 +34,28 @@ public class ApplicationContextController {
     @Autowired
     HTTPServiceGateway httpServiceGateway;
 
-    public ApplicationContextController(Publisher publisher, Subscriber subscriber) {
-        this.publisher = publisher;
-        this.subscriber = subscriber;
-    }
 
     @PostMapping("/applicationContext")
     public String createApplicationContext(@RequestParam String id) throws MqttException {
+        String clientid1 = UUID.randomUUID().toString();
+        MqttClient client1 = new MqttClient("tcp://test.mosquitto.org:1883", clientid1);
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setAutomaticReconnect(true);
+        options.setCleanSession(true);
+        options.setConnectionTimeout(10);
+        client1.connect(options);
+        Publisher publisher = new Publisher(client1);
+
+        String clientid2 = UUID.randomUUID().toString();
+        MqttClient client2 = new MqttClient("tcp://test.mosquitto.org:1883", clientid2);
+        client2.connect(options);
+        Subscriber subscriber = new Subscriber(client2);
         ApplicationContext applicationContext = new ApplicationContext(publisher,subscriber, httpServiceGateway);
         applicationContext.setAppId(id);
         eventBus.register(applicationContext);
-        Udo udo = new Udo(null, null);
-        udo.setId("udo");
-        applicationContext.subscribeMessage(applicationContext.getAppId(),udo);
+//        Udo udo = new Udo(null, null);
+//        udo.setId("udo");
+//        applicationContext.subscribeMessage(applicationContext.getAppId(),udo);
         return applicationContext.getAppId();
     }
 
