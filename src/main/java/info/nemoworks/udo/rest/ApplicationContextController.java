@@ -53,10 +53,18 @@ public class ApplicationContextController {
         ApplicationContext applicationContext = new ApplicationContext(publisher,subscriber, httpServiceGateway);
         applicationContext.setAppId(id);
         eventBus.register(applicationContext);
-//        Udo udo = new Udo(null, null);
-//        udo.setId("udo");
-//        applicationContext.subscribeMessage(applicationContext.getAppId(),udo);
         return applicationContext.getAppId();
+    }
+
+    @GetMapping("/applicationContext")
+    public Set<String> getApplicationContext() {
+        return ApplicationContextCluster.getApplicationContextMap().keySet();
+    }
+
+    @GetMapping("/applicationContext/{applicationContextId}")
+    public Set<String> getApplicationContextUdos(@PathVariable String applicationContextId) {
+        return ApplicationContextCluster.getApplicationContextMap()
+                .get(applicationContextId).getValue1();
     }
 
     @PostMapping("/applicationContext/{applicationContextId}")
@@ -67,6 +75,15 @@ public class ApplicationContextController {
         ApplicationContextCluster.getApplicationContextMap().get(applicationContextId)
                 .getValue1().add(udo.getId());
         applicationContext.subscribeMessage(applicationContext.getAppId(),udo);
+    }
+
+
+
+    @DeleteMapping("/applicationContext/{applicationContextId}")
+    public void deleteUdoInApplicationContext(@PathVariable String applicationContextId,@RequestParam String udoId) throws JsonProcessingException, MqttException {
+        Udo udo = udoService.getUdoById(udoId);
+        ApplicationContextCluster.getApplicationContextMap().get(applicationContextId)
+                .getValue1().remove(udo.getId());
     }
 
     @DeleteMapping("/applicationContext")
