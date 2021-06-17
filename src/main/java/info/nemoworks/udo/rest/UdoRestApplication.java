@@ -46,7 +46,8 @@ public class UdoRestApplication implements CommandLineRunner {
         eventBus.register(syncEventHandler);
         eventBus.register(saveByUriEventHandler);
         eventBus.register(subscribeByMqttEventHandler);
-        httpServiceGateway.register("Hw0q73kBw9XfSnFlK_LZ", new URI("http://localhost:8999/"));
+        httpServiceGateway.register("OfCKE3oBtyoKFg71_rOW", new URI("http://localhost:8999/air"));
+        httpServiceGateway.register("N_CKE3oBtyoKFg71Q7PL", new URI("http://localhost:8998/airquality"));
     }
 
 
