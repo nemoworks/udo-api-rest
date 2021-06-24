@@ -5,6 +5,7 @@ import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import info.nemoworks.udo.service.eventHandler.SaveByUriEventHandler;
 import info.nemoworks.udo.service.eventHandler.SubscribeByMqttEventHandler;
 import info.nemoworks.udo.service.eventHandler.SyncEventHandler;
+import java.net.URISyntaxException;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +13,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
-
-import java.net.URI;
-import java.net.URISyntaxException;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "info.nemoworks.udo")
@@ -46,8 +44,8 @@ public class UdoRestApplication implements CommandLineRunner {
         eventBus.register(syncEventHandler);
         eventBus.register(saveByUriEventHandler);
         eventBus.register(subscribeByMqttEventHandler);
-        httpServiceGateway.register("OfCKE3oBtyoKFg71_rOW", new URI("http://localhost:8999/air"));
-        httpServiceGateway.register("N_CKE3oBtyoKFg71Q7PL", new URI("http://localhost:8998/airquality"));
+//        httpServiceGateway.register("OfCKE3oBtyoKFg71_rOW", new URI("http://localhost:8999/air"));
+//        httpServiceGateway.register("N_CKE3oBtyoKFg71Q7PL", new URI("http://localhost:8998/airquality"));
     }
 
 

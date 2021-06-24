@@ -118,6 +118,24 @@ public class UdoController {
         return udo;
     }
 
+    @DeleteMapping("/schemas/{udoi}/{name}")
+    public List<UdoType> deleteUdoTypeWithName(@PathVariable String udoi,
+        @PathVariable String name) {
+        log.info("now deleting udoType " + udoi + "...");
+        UdoType udoType = udoService.getTypeById(udoi);
+        if (udoType.getSchema().has("properties")) {
+            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+                .fromJson(udoType.getSchema().toString(), JsonObject.class), name);
+            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
+        }
+        try {
+            udoService.deleteTypeById(udoi);
+        } catch (UdoServiceException e) {
+            e.printStackTrace();
+        }
+        return udoService.getAllTypes();
+    }
+
     @DeleteMapping("/schemas/{udoi}")
     public List<UdoType> deleteUdoType(@PathVariable String udoi) {
         log.info("now deleting udoType " + udoi + "...");

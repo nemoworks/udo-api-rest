@@ -2,23 +2,28 @@ package info.nemoworks.udo.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.eventbus.EventBus;
-import com.google.gson.JsonObject;
 import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import info.nemoworks.udo.messaging.messaging.ApplicationContext;
 import info.nemoworks.udo.messaging.messaging.ApplicationContextCluster;
 import info.nemoworks.udo.messaging.messaging.Publisher;
 import info.nemoworks.udo.messaging.messaging.Subscriber;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.model.UdoType;
 import info.nemoworks.udo.service.UdoService;
+import java.io.IOException;
+import java.util.Set;
+import java.util.UUID;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Set;
-import java.util.UUID;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @CrossOrigin
@@ -36,7 +41,8 @@ public class ApplicationContextController {
 
 
     @PostMapping("/applicationContext")
-    public String createApplicationContext(@RequestParam String id) throws MqttException {
+    public String createApplicationContext(@RequestParam String id)
+        throws MqttException, IOException {
         String clientid1 = UUID.randomUUID().toString();
         MqttClient client1 = new MqttClient("tcp://test.mosquitto.org:1883", clientid1);
         MqttConnectOptions options = new MqttConnectOptions();
@@ -50,7 +56,8 @@ public class ApplicationContextController {
         MqttClient client2 = new MqttClient("tcp://test.mosquitto.org:1883", clientid2);
         client2.connect(options);
         Subscriber subscriber = new Subscriber(client2);
-        ApplicationContext applicationContext = new ApplicationContext(publisher,subscriber, httpServiceGateway);
+        ApplicationContext applicationContext = new ApplicationContext(publisher, subscriber,
+            httpServiceGateway);
         applicationContext.setAppId(id);
         eventBus.register(applicationContext);
         return applicationContext.getAppId();
@@ -64,26 +71,27 @@ public class ApplicationContextController {
     @GetMapping("/applicationContext/{applicationContextId}")
     public Set<String> getApplicationContextUdos(@PathVariable String applicationContextId) {
         return ApplicationContextCluster.getApplicationContextMap()
-                .get(applicationContextId).getValue1();
+            .get(applicationContextId).getValue1();
     }
 
     @PostMapping("/applicationContext/{applicationContextId}")
-    public void addUdoInApplicationContext(@PathVariable String applicationContextId,@RequestParam String udoId) throws JsonProcessingException, MqttException {
+    public void addUdoInApplicationContext(@PathVariable String applicationContextId,
+        @RequestParam String udoId) throws JsonProcessingException, MqttException {
         Udo udo = udoService.getUdoById(udoId);
         ApplicationContext applicationContext = ApplicationContextCluster.getApplicationContextMap()
-                .get(applicationContextId).getValue0();
+            .get(applicationContextId).getValue0();
         ApplicationContextCluster.getApplicationContextMap().get(applicationContextId)
-                .getValue1().add(udo.getId());
-        applicationContext.subscribeMessage(applicationContext.getAppId(),udo);
+            .getValue1().add(udo.getId());
+        applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
     }
 
 
-
     @DeleteMapping("/applicationContext/{applicationContextId}")
-    public void deleteUdoInApplicationContext(@PathVariable String applicationContextId,@RequestParam String udoId) throws JsonProcessingException, MqttException {
+    public void deleteUdoInApplicationContext(@PathVariable String applicationContextId,
+        @RequestParam String udoId) throws JsonProcessingException, MqttException {
         Udo udo = udoService.getUdoById(udoId);
         ApplicationContextCluster.getApplicationContextMap().get(applicationContextId)
-                .getValue1().remove(udo.getId());
+            .getValue1().remove(udo.getId());
     }
 
     @DeleteMapping("/applicationContext")
@@ -91,7 +99,5 @@ public class ApplicationContextController {
         ApplicationContextCluster.removeApplicationContext(id);
         return ApplicationContextCluster.getApplicationContextMap().keySet();
     }
-
-
 
 }
