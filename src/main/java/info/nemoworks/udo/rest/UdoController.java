@@ -84,7 +84,6 @@ public class UdoController {
     @PostMapping("/schemas")
     public UdoType createUdoType(@RequestBody JsonObject params) {
         log.info("now saving a new udotype...");
-//        String name = params.get("schemaName").getAsString();
         JsonObject content = (JsonObject) params.get("content");
         String name = params.get("name").getAsString();
         UdoType udoType = new UdoType(content);
@@ -102,16 +101,30 @@ public class UdoController {
     }
 
     @PostMapping("/documents")
-    public Udo createUdoByUri(@RequestParam String uri, @RequestParam String name)
+    public Udo createUdoByUri(@RequestParam String uri, @RequestParam String name,
+        @RequestParam String location, @RequestParam String uriType)
         throws UdoServiceException, InterruptedException, JsonProcessingException, UdoNotExistException, UdoPersistException {
         log.info("now creating udo by uri: " + uri + "...");
-        String id = udoService.createUdoByUri(uri);
+        String id = udoService.createUdoByUri(uri, location, uriType);
         Udo udo = udoService.getUdoById(id);
         while (udo == null) {
             udo = udoService.getUdoById(id);
             Thread.sleep(1000);
         }
+//        System.out.println(udo.getContextInfo().getContext("location"));
+//        System.out.println(udo.getUri());
 //        UdoType udoType = udo.inferType();
+//        System.out.println(udo.inferType());
+        UdoType udoType = udo.getType();
+        JsonObject schema = udoType.getSchema();
+        schema.addProperty("title", name);
+        udoType.setSchema(schema);
+        udoService.saveOrUpdateType(udoType);
+//        ContextInfo contextInfo = udo.getContextInfo();
+//        contextInfo.addContext("location", location);
+//        udo.setContextInfo(contextInfo);
+//        udo.setType(udoType);
+//        udoService.saveOrUpdateUdo(udo);
         SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
             .fromJson(udo.inferType().getSchema().toString(), JsonObject.class), name);
         this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
@@ -170,6 +183,27 @@ public class UdoController {
         if (content.has("properties")) {
             SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
                 .fromJson(udoType.getSchema().toString(), JsonObject.class));
+            this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
+        }
+        try {
+            return udoService.saveOrUpdateType(udoType);
+        } catch (UdoServiceException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @PutMapping("/schemas/{udoi}/{name}")
+    public UdoType updateUdoTypeWithName(@RequestBody JsonObject params,
+        @PathVariable String udoi, @PathVariable String name) {
+//        String udoi = params.getString("udoi");
+        log.info("now updating schema " + udoi + "...");
+//        JsonObject content = (JsonObject) params.get("content");
+        UdoType udoType = new UdoType(params);
+        udoType.setId(udoi);
+        if (params.has("properties")) {
+            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+                .fromJson(udoType.getSchema().toString(), JsonObject.class), name);
             this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
         }
         try {

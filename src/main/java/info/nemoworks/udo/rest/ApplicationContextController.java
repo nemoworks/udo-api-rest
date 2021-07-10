@@ -3,8 +3,10 @@ package info.nemoworks.udo.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.eventbus.EventBus;
 import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
+import info.nemoworks.udo.messaging.gateway.MQTTGateway;
 import info.nemoworks.udo.messaging.messaging.ApplicationContext;
 import info.nemoworks.udo.messaging.messaging.ApplicationContextCluster;
+import info.nemoworks.udo.messaging.messaging.FilterRule;
 import info.nemoworks.udo.messaging.messaging.Publisher;
 import info.nemoworks.udo.messaging.messaging.Subscriber;
 import info.nemoworks.udo.model.Udo;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +42,9 @@ public class ApplicationContextController {
     @Autowired
     HTTPServiceGateway httpServiceGateway;
 
+    @Autowired
+    MQTTGateway mqttGateway;
+
 
     @PostMapping("/applicationContext")
     public String createApplicationContext(@RequestParam String id)
@@ -50,14 +56,25 @@ public class ApplicationContextController {
         options.setCleanSession(true);
         options.setConnectionTimeout(10);
         client1.connect(options);
-        Publisher publisher = new Publisher(client1);
+        Publisher httpPublisher = new Publisher(client1);
 
         String clientid2 = UUID.randomUUID().toString();
         MqttClient client2 = new MqttClient("tcp://test.mosquitto.org:1883", clientid2);
         client2.connect(options);
-        Subscriber subscriber = new Subscriber(client2);
-        ApplicationContext applicationContext = new ApplicationContext(publisher, subscriber,
-            httpServiceGateway);
+        Subscriber httpSubscriber = new Subscriber(client2);
+
+        String clientid3 = UUID.randomUUID().toString();
+        MqttClient client3 = new MqttClient("tcp://broker.emqx.io:1883", clientid3);
+        String clientid4 = UUID.randomUUID().toString();
+        MqttClient client4 = new MqttClient("tcp://broker.emqx.io:1883", clientid4);
+        client3.connect(options);
+        client4.connect(options);
+        Publisher mqttPublisher = new Publisher(client3);
+        Subscriber mqttSubscriber = new Subscriber(client4);
+        ApplicationContext applicationContext = new ApplicationContext(httpPublisher,
+            httpSubscriber,
+            mqttPublisher, mqttSubscriber,
+            httpServiceGateway, mqttGateway);
         applicationContext.setAppId(id);
         eventBus.register(applicationContext);
         return applicationContext.getAppId();
@@ -100,4 +117,11 @@ public class ApplicationContextController {
         return ApplicationContextCluster.getApplicationContextMap().keySet();
     }
 
+    @PostMapping("/applicationContext/filter")
+    public String setFilterRule(@RequestBody String filterRule, @RequestParam String id) {
+        ApplicationContextCluster.getApplicationContextMap().get(id)
+            .getValue0()
+            .setFilterRule(new FilterRule(filterRule));
+        return "Set FilterRule OK.";
+    }
 }

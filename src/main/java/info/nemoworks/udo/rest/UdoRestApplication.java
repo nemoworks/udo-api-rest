@@ -2,6 +2,7 @@ package info.nemoworks.udo.rest;
 
 import com.google.common.eventbus.EventBus;
 import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
+import info.nemoworks.udo.messaging.gateway.MQTTGateway;
 import info.nemoworks.udo.service.eventHandler.SaveByUriEventHandler;
 import info.nemoworks.udo.service.eventHandler.SubscribeByMqttEventHandler;
 import info.nemoworks.udo.service.eventHandler.SyncEventHandler;
@@ -27,6 +28,9 @@ public class UdoRestApplication implements CommandLineRunner {
     private HTTPServiceGateway httpServiceGateway;
 
     @Autowired
+    private MQTTGateway mqttGateway;
+
+    @Autowired
     EventBus eventBus;
 
     @Autowired
@@ -40,6 +44,7 @@ public class UdoRestApplication implements CommandLineRunner {
 
     @PostConstruct
     public void registerEventHandler() throws URISyntaxException {
+        eventBus.register(mqttGateway);
         eventBus.register(httpServiceGateway);
         eventBus.register(syncEventHandler);
         eventBus.register(saveByUriEventHandler);
@@ -57,10 +62,16 @@ public class UdoRestApplication implements CommandLineRunner {
             if (httpServiceGateway.getEndpoints().size() > 0) {
                 httpServiceGateway.start();
             }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if (mqttGateway.getEndpoints().size() > 0) {
+                mqttGateway.start();
+            }
+            if (httpServiceGateway.getEndpoints().size() > 0 ||
+                mqttGateway.getEndpoints().size() > 0) {
+                try {
+                    Thread.sleep(100000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
