@@ -64,9 +64,12 @@ public class ApplicationContextController {
         Subscriber httpSubscriber = new Subscriber(client2);
 
         String clientid3 = UUID.randomUUID().toString();
-        MqttClient client3 = new MqttClient("tcp://broker.emqx.io:1883", clientid3);
+        MqttClient client3 = new MqttClient("tcp://210.28.134.32:1883", clientid3);
         String clientid4 = UUID.randomUUID().toString();
-        MqttClient client4 = new MqttClient("tcp://broker.emqx.io:1883", clientid4);
+        MqttClient client4 = new MqttClient("tcp://210.28.134.32:1883", clientid4);
+        options.setUserName("udo-user");
+        char[] password = "123456".toCharArray();
+        options.setPassword(password);
         client3.connect(options);
         client4.connect(options);
         Publisher mqttPublisher = new Publisher(client3);
@@ -119,9 +122,10 @@ public class ApplicationContextController {
 
     @PostMapping("/applicationContext/filter")
     public String setFilterRule(@RequestBody String filterRule, @RequestParam String id) {
+        System.out.println("filterRule: " + filterRule);
         ApplicationContextCluster.getApplicationContextMap().get(id)
             .getValue0()
             .setFilterRule(new FilterRule(filterRule));
-        return "Set FilterRule OK.";
+        return filterRule;
     }
 }

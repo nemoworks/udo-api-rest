@@ -1,20 +1,31 @@
 package info.nemoworks.udo.rest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import info.nemoworks.udo.graphql.graphqlBuilder.GraphQLBuilder;
 import info.nemoworks.udo.graphql.schemaParser.SchemaTree;
+import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
+import info.nemoworks.udo.messaging.gateway.MQTTGateway;
+import info.nemoworks.udo.messaging.messaging.ApplicationContext;
+import info.nemoworks.udo.messaging.messaging.ApplicationContextCluster;
+import info.nemoworks.udo.messaging.messaging.Publisher;
+import info.nemoworks.udo.messaging.messaging.Subscriber;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UdoType;
 import info.nemoworks.udo.service.UdoService;
 import info.nemoworks.udo.service.UdoServiceException;
 import info.nemoworks.udo.storage.UdoNotExistException;
 import info.nemoworks.udo.storage.UdoPersistException;
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -40,6 +51,15 @@ public class UdoController {
 
     private GraphQL graphQL;
     private GraphQLBuilder graphQlBuilder;
+
+    @Autowired
+    EventBus eventBus;
+
+    @Autowired
+    HTTPServiceGateway httpServiceGateway;
+
+    @Autowired
+    MQTTGateway mqttGateway;
 
     @Autowired
     public UdoController(GraphQLBuilder graphQlBuilder, UdoService udoService) {
@@ -102,17 +122,17 @@ public class UdoController {
 
     @PostMapping("/documents")
     public Udo createUdoByUri(@RequestParam String uri, @RequestParam String name,
-        @RequestParam String location, @RequestParam String uriType)
-        throws UdoServiceException, InterruptedException, JsonProcessingException, UdoNotExistException, UdoPersistException {
+        @RequestParam float longitude, @RequestParam float latitude,
+        @RequestParam String uriType, @RequestParam String avatarUrl)
+        throws UdoServiceException, InterruptedException, IOException, UdoNotExistException, UdoPersistException, MqttException {
         log.info("now creating udo by uri: " + uri + "...");
-        String id = udoService.createUdoByUri(uri, location, uriType);
+        String id = udoService.createUdoByUri(uri, longitude, latitude, uriType, avatarUrl);
         Udo udo = udoService.getUdoById(id);
-        while (udo == null) {
+        while (udo == null || udo.getData() == null
+            || udo.getData().getAsJsonObject().get("location") == null || udo.getType() == null) {
             udo = udoService.getUdoById(id);
             Thread.sleep(1000);
         }
-//        System.out.println(udo.getContextInfo().getContext("location"));
-//        System.out.println(udo.getUri());
 //        UdoType udoType = udo.inferType();
 //        System.out.println(udo.inferType());
         UdoType udoType = udo.getType();
@@ -128,6 +148,39 @@ public class UdoController {
         SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
             .fromJson(udo.inferType().getSchema().toString(), JsonObject.class), name);
         this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
+        String clientid1 = UUID.randomUUID().toString();
+        MqttClient client1 = new MqttClient("tcp://test.mosquitto.org:1883", clientid1);
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setAutomaticReconnect(true);
+        options.setCleanSession(true);
+        options.setConnectionTimeout(10);
+        client1.connect(options);
+        Publisher httpPublisher = new Publisher(client1);
+
+        String clientid2 = UUID.randomUUID().toString();
+        MqttClient client2 = new MqttClient("tcp://test.mosquitto.org:1883", clientid2);
+        client2.connect(options);
+        Subscriber httpSubscriber = new Subscriber(client2);
+
+        String clientid3 = UUID.randomUUID().toString();
+        MqttClient client3 = new MqttClient("tcp://210.28.134.32:1883", clientid3);
+        String clientid4 = UUID.randomUUID().toString();
+        MqttClient client4 = new MqttClient("tcp://210.28.134.32:1883", clientid4);
+        options.setUserName("udo-user");
+        char[] password = "123456".toCharArray();
+        options.setPassword(password);
+        client3.connect(options);
+        client4.connect(options);
+        Publisher mqttPublisher = new Publisher(client3);
+        Subscriber mqttSubscriber = new Subscriber(client4);
+        ApplicationContext applicationContext = new ApplicationContext(httpPublisher,
+            httpSubscriber,
+            mqttPublisher, mqttSubscriber,
+            httpServiceGateway, mqttGateway);
+        applicationContext.setAppId(id);
+        eventBus.register(applicationContext);
+        ApplicationContextCluster.createApplicationContext(applicationContext);
+        ApplicationContextCluster.addUdoId("app_" + id, id);
         return udo;
     }
 
@@ -136,11 +189,11 @@ public class UdoController {
         @PathVariable String name) {
         log.info("now deleting udoType " + udoi + "...");
         UdoType udoType = udoService.getTypeById(udoi);
-        if (udoType.getSchema().has("properties")) {
-            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
-                .fromJson(udoType.getSchema().toString(), JsonObject.class), name);
-            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
-        }
+//        if (udoType.getSchema().has("properties")) {
+//            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+//                .fromJson(udoType.getSchema().toString(), JsonObject.class), name);
+//            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
+//        }
         try {
             udoService.deleteTypeById(udoi);
         } catch (UdoServiceException e) {
@@ -153,11 +206,11 @@ public class UdoController {
     public List<UdoType> deleteUdoType(@PathVariable String udoi) {
         log.info("now deleting udoType " + udoi + "...");
         UdoType udoType = udoService.getTypeById(udoi);
-        if (udoType.getSchema().has("properties")) {
-            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
-                .fromJson(udoType.getSchema().toString(), JsonObject.class));
-            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
-        }
+//        if (udoType.getSchema().has("properties")) {
+//            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+//                .fromJson(udoType.getSchema().toString(), JsonObject.class));
+//            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
+//        }
         try {
             udoService.deleteTypeById(udoi);
         } catch (UdoServiceException e) {
