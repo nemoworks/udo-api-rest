@@ -121,11 +121,20 @@ public class ApplicationContextController {
     }
 
     @PostMapping("/applicationContext/filter")
-    public String setFilterRule(@RequestBody String filterRule, @RequestParam String id) {
+    public String setFilterRule(@RequestBody String filterRule, @RequestParam String id,
+        @RequestParam String uid) {
         System.out.println("filterRule: " + filterRule);
         ApplicationContextCluster.getApplicationContextMap().get(id)
             .getValue0()
-            .setFilterRule(new FilterRule(filterRule));
+            .addFilterRule(uid, new FilterRule(filterRule));
         return filterRule;
+    }
+
+    @GetMapping("/applicationContext/filter")
+    public String getFilterRule(@RequestParam String id, @RequestParam String uid) {
+        return ApplicationContextCluster.getApplicationContextMap().get(id)
+            .getValue0()
+            .getFilterRule(uid)
+            .getFilterString();
     }
 }

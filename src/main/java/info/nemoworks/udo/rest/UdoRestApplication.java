@@ -57,22 +57,23 @@ public class UdoRestApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        while (true) {
+//        while (true) {
 //            System.out.println("start...");
-            if (httpServiceGateway.getEndpoints().size() > 0) {
-                httpServiceGateway.start();
+        if (httpServiceGateway.getEndpoints().size() > 0) {
+            httpServiceGateway.start();
+        }
+        if (mqttGateway.getEndpoints().size() > 0) {
+            mqttGateway.start();
+        }
+        if (httpServiceGateway.getEndpoints().size() > 0) {
+//                mqttGateway.getEndpoints().size() > 0) {
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-            if (mqttGateway.getEndpoints().size() > 0) {
-                mqttGateway.start();
-            }
-            if (httpServiceGateway.getEndpoints().size() > 0 ||
-                mqttGateway.getEndpoints().size() > 0) {
-                try {
-                    Thread.sleep(100000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+//            }
+//        }
         }
     }
 

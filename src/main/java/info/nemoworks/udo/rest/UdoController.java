@@ -74,7 +74,7 @@ public class UdoController {
         ExecutionResult result = graphQL.execute(query);
         log.info("query: " + query);
         log.info("errors: " + result.getErrors());
-        System.out.println(ResponseEntity.ok(result.getData()));
+//        System.out.println(ResponseEntity.ok(result.getData()));
         if (result.getErrors().isEmpty()) {
             return ResponseEntity.ok(result.getData());
         } else {
