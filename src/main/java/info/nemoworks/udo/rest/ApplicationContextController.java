@@ -77,9 +77,10 @@ public class ApplicationContextController {
         ApplicationContext applicationContext = new ApplicationContext(httpPublisher,
             httpSubscriber,
             mqttPublisher, mqttSubscriber,
-            httpServiceGateway, mqttGateway);
+            httpServiceGateway, mqttGateway, udoService);
         applicationContext.setAppId(id);
         eventBus.register(applicationContext);
+        applicationContext.subscribeMessage(applicationContext.getAppId());
         return applicationContext.getAppId();
     }
 
@@ -102,7 +103,8 @@ public class ApplicationContextController {
             .get(applicationContextId).getValue0();
         ApplicationContextCluster.getApplicationContextMap().get(applicationContextId)
             .getValue1().add(udo.getId());
-        applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
+        applicationContext.publishRegisterMessage(applicationContext.getAppId(), udo.getId());
+//        applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
     }
 
 
@@ -112,6 +114,9 @@ public class ApplicationContextController {
         Udo udo = udoService.getUdoById(udoId);
         ApplicationContextCluster.getApplicationContextMap().get(applicationContextId)
             .getValue1().remove(udo.getId());
+        ApplicationContext applicationContext = ApplicationContextCluster.getApplicationContextMap()
+            .get(applicationContextId).getValue0();
+        applicationContext.publishDeleteMessage(applicationContext.getAppId(), udo.getId());
     }
 
     @DeleteMapping("/applicationContext")

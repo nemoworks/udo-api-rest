@@ -176,11 +176,11 @@ public class UdoController {
         ApplicationContext applicationContext = new ApplicationContext(httpPublisher,
             httpSubscriber,
             mqttPublisher, mqttSubscriber,
-            httpServiceGateway, mqttGateway);
+            httpServiceGateway, mqttGateway, udoService);
         applicationContext.setAppId(id);
         eventBus.register(applicationContext);
         ApplicationContextCluster.createApplicationContext(applicationContext);
-        ApplicationContextCluster.addUdoId("app_" + id, id);
+        ApplicationContextCluster.addUdoId(id, id);
         return udo;
     }
 
@@ -189,11 +189,11 @@ public class UdoController {
         @PathVariable String name) {
         log.info("now deleting udoType " + udoi + "...");
         UdoType udoType = udoService.getTypeById(udoi);
-//        if (udoType.getSchema().has("properties")) {
-//            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
-//                .fromJson(udoType.getSchema().toString(), JsonObject.class), name);
-//            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
-//        }
+        if (udoType.getSchema().has("properties")) {
+            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+                .fromJson(udoType.getSchema().toString(), JsonObject.class), name);
+            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
+        }
         try {
             udoService.deleteTypeById(udoi);
         } catch (UdoServiceException e) {
@@ -206,11 +206,11 @@ public class UdoController {
     public List<UdoType> deleteUdoType(@PathVariable String udoi) {
         log.info("now deleting udoType " + udoi + "...");
         UdoType udoType = udoService.getTypeById(udoi);
-//        if (udoType.getSchema().has("properties")) {
-//            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
-//                .fromJson(udoType.getSchema().toString(), JsonObject.class));
-//            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
-//        }
+        if (udoType.getSchema().has("properties")) {
+            SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
+                .fromJson(udoType.getSchema().toString(), JsonObject.class));
+            this.graphQL = graphQlBuilder.deleteSchemaInGraphQl(schemaTree);
+        }
         try {
             udoService.deleteTypeById(udoi);
         } catch (UdoServiceException e) {
