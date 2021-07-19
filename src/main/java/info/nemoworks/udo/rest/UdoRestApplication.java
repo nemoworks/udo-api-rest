@@ -11,18 +11,13 @@ import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
-@SpringBootApplication
+
 @ComponentScan(basePackages = "info.nemoworks.udo")
 @Slf4j
 public class UdoRestApplication implements CommandLineRunner {
 
-    public static void main(String[] args) {
-        SpringApplication.run(UdoRestApplication.class, args);
-    }
 
     @Autowired
     private HTTPServiceGateway httpServiceGateway;
