@@ -13,11 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.ComponentScan;
 
-
 @ComponentScan(basePackages = "info.nemoworks.udo")
 @Slf4j
 public class UdoRestApplication implements CommandLineRunner {
 
+//    public static void main(String[] args) {
+//        SpringApplication.run(UdoRestApplication.class, args);
+//    }
 
     @Autowired
     private HTTPServiceGateway httpServiceGateway;
