@@ -126,7 +126,7 @@ public class UdoController {
         @RequestParam String uriType, @RequestParam String avatarUrl)
         throws UdoServiceException, InterruptedException, IOException, UdoNotExistException, UdoPersistException, MqttException {
         log.info("now creating udo by uri: " + uri + "...");
-        String id = udoService.createUdoByUri(uri, longitude, latitude, uriType, avatarUrl);
+        String id = udoService.createUdoByUri(uri, longitude, latitude, uriType, avatarUrl, name);
         Udo udo = udoService.getUdoById(id);
         while (udo == null || udo.getData() == null
             || udo.getData().getAsJsonObject().get("location") == null || udo.getType() == null) {
@@ -136,17 +136,13 @@ public class UdoController {
 //        UdoType udoType = udo.inferType();
 //        System.out.println(udo.inferType());
         UdoType udoType = udo.getType();
-        JsonObject schema = udoType.getSchema();
-        schema.addProperty("title", name);
-        udoType.setSchema(schema);
-        udoService.saveOrUpdateType(udoType);
 //        ContextInfo contextInfo = udo.getContextInfo();
 //        contextInfo.addContext("location", location);
 //        udo.setContextInfo(contextInfo);
 //        udo.setType(udoType);
 //        udoService.saveOrUpdateUdo(udo);
         SchemaTree schemaTree = new SchemaTree().createSchemaTree(new Gson()
-            .fromJson(udo.inferType().getSchema().toString(), JsonObject.class), name);
+            .fromJson(udoType.getSchema().toString(), JsonObject.class), name);
         this.graphQL = graphQlBuilder.addSchemaInGraphQL(schemaTree);
         String clientid1 = UUID.randomUUID().toString();
         MqttClient client1 = new MqttClient("tcp://test.mosquitto.org:1883", clientid1);
