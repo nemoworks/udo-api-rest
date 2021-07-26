@@ -7,6 +7,7 @@ import info.nemoworks.udo.service.eventHandler.SaveByUriEventHandler;
 import info.nemoworks.udo.service.eventHandler.SubscribeByMqttEventHandler;
 import info.nemoworks.udo.service.eventHandler.SyncEventHandler;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,24 +54,28 @@ public class UdoRestApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-
-//        while (true) {
-//            System.out.println("start...");
-        if (httpServiceGateway.getEndpoints().size() > 0) {
-            httpServiceGateway.start();
-        }
-        if (mqttGateway.getEndpoints().size() > 0) {
-            mqttGateway.start();
-        }
-        if (httpServiceGateway.getEndpoints().size() > 0) {
-//                mqttGateway.getEndpoints().size() > 0) {
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        while (true) {
+            LocalDateTime time = LocalDateTime.now();
+            int sec = time.getSecond();
+            if (sec % 20 == 0) {
+                if (httpServiceGateway.getEndpoints().size() > 0) {
+                    httpServiceGateway.start();
+                }
+                if (mqttGateway.getEndpoints().size() > 0) {
+                    mqttGateway.start();
+                }
             }
 //            }
-//        }
+//            if (httpServiceGateway.getEndpoints().size() > 0) {
+//                mqttGateway.getEndpoints().size() > 0) {
+//            TimeUnit.SECONDS.sleep(10);
+//            try {
+//                Thread.sleep(10000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//            }
+//            }
         }
     }
 
