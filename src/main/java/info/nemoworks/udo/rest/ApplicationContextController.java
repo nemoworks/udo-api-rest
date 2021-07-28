@@ -50,16 +50,20 @@ public class ApplicationContextController {
     public String createApplicationContext(@RequestParam String id)
         throws MqttException, IOException {
         String clientid1 = UUID.randomUUID().toString();
-        MqttClient client1 = new MqttClient("tcp://test.mosquitto.org:1883", clientid1);
+        MqttClient client1 = new MqttClient("tcp://114.212.84.206:1883", clientid1);
         MqttConnectOptions options = new MqttConnectOptions();
+        options.setUserName("udo-user");
+        char[] password = "123456".toCharArray();
+        options.setPassword(password);
         options.setAutomaticReconnect(true);
         options.setCleanSession(true);
+        options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_DEFAULT);
         options.setConnectionTimeout(10);
         client1.connect(options);
         Publisher httpPublisher = new Publisher(client1);
 
         String clientid2 = UUID.randomUUID().toString();
-        MqttClient client2 = new MqttClient("tcp://test.mosquitto.org:1883", clientid2);
+        MqttClient client2 = new MqttClient("tcp://114.212.84.206:1883", clientid2);
         client2.connect(options);
         Subscriber httpSubscriber = new Subscriber(client2);
 
@@ -67,9 +71,7 @@ public class ApplicationContextController {
         MqttClient client3 = new MqttClient("tcp://114.212.84.206:1883", clientid3);
         String clientid4 = UUID.randomUUID().toString();
         MqttClient client4 = new MqttClient("tcp://114.212.84.206:1883", clientid4);
-        options.setUserName("udo-user");
-        char[] password = "123456".toCharArray();
-        options.setPassword(password);
+
         client3.connect(options);
         client4.connect(options);
         Publisher mqttPublisher = new Publisher(client3);
