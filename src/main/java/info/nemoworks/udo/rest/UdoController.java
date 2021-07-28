@@ -159,9 +159,9 @@ public class UdoController {
         Subscriber httpSubscriber = new Subscriber(client2);
 
         String clientid3 = UUID.randomUUID().toString();
-        MqttClient client3 = new MqttClient("tcp://210.28.134.32:1883", clientid3);
+        MqttClient client3 = new MqttClient("tcp://114.212.84.206:1883", clientid3);
         String clientid4 = UUID.randomUUID().toString();
-        MqttClient client4 = new MqttClient("tcp://210.28.134.32:1883", clientid4);
+        MqttClient client4 = new MqttClient("tcp://114.212.84.206:1883", clientid4);
         options.setUserName("udo-user");
         char[] password = "123456".toCharArray();
         options.setPassword(password);
